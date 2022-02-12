@@ -1,32 +1,32 @@
 package main
 
 import (
+	"bufio"
 	"database/sql"
-	"fmt"
-    "bufio"
-    "log"
-    "os"
-	"strings"
 	"errors"
-	"time"
-	"math/rand"
-	_ "github.com/mattn/go-sqlite3"
+	"fmt"
 	"github.com/gookit/color"
+	_ "github.com/mattn/go-sqlite3"
+	"log"
+	"math/rand"
+	"os"
+	"strings"
+	"time"
 )
 
 func onlyCapitalLetters(s string) bool {
-    for _, r := range s {
-        if (r < 'A' || r > 'Z') {
-            return false
-        }
-    }
-    return true
+	for _, r := range s {
+		if r < 'A' || r > 'Z' {
+			return false
+		}
+	}
+	return true
 }
 
 func scanFileLineByLine(db *sql.DB, filename string, doSomethingWithScannedData func(db *sql.DB, scanner *bufio.Scanner)) {
-    file, err := os.Open(filename)
-    fatalError(err)
-    scanner := bufio.NewScanner(file)
+	file, err := os.Open(filename)
+	fatalError(err)
+	scanner := bufio.NewScanner(file)
 	doSomethingWithScannedData(db, scanner)
 	defer file.Close()
 }
@@ -41,7 +41,7 @@ func createTable(db *sql.DB) {
 	);`
 	log.Println("Create five_letter_words table")
 	statement, err := db.Prepare(createWordsTableSQL)
-    fatalError(err)
+	fatalError(err)
 	statement.Exec()
 	log.Println("five_letter_words table created")
 }
@@ -58,14 +58,14 @@ func addToSqliteDatabase(db *sql.DB, word string) {
 }
 
 func fileFound(name string) bool {
-    _, err := os.Stat(name)
-    if err == nil {
-        return true
-    }
-    if errors.Is(err, os.ErrNotExist) {
-        return false
-    }
-    return false
+	_, err := os.Stat(name)
+	if err == nil {
+		return true
+	}
+	if errors.Is(err, os.ErrNotExist) {
+		return false
+	}
+	return false
 }
 
 func createSqlite3Db() {
@@ -77,16 +77,16 @@ func createSqlite3Db() {
 }
 
 func wordExists(db *sql.DB, word string) bool {
-    row := db.QueryRow("select word from five_letter_words where word= ?", word)
-    temp := ""
-    err := row.Scan(&temp)
+	row := db.QueryRow("select word from five_letter_words where word= ?", word)
+	temp := ""
+	err := row.Scan(&temp)
 	if err != nil && err != sql.ErrNoRows {
 		fatalError(err)
 	}
-    if temp != "" {
-        return true
-    }
-    return false
+	if temp != "" {
+		return true
+	}
+	return false
 }
 
 func updateDatabase(db *sql.DB, word string) {
@@ -98,7 +98,7 @@ func updateDatabase(db *sql.DB, word string) {
 		fatalError(err)
 		_, err = statement.Exec(word, 0, 1, 1)
 		fatalError(err)
-	} else {	
+	} else {
 		//log.Println("Updating: " + word)
 		updateWordSQL := `UPDATE five_letter_words SET wordle_word_list = 1, wordle_guess_list = 1 WHERE word = ?`
 		statement, err := db.Prepare(updateWordSQL)
@@ -117,7 +117,7 @@ func updateMoreDatabase(db *sql.DB, word string) {
 		fatalError(err)
 		_, err = statement.Exec(word, 0, 1)
 		fatalError(err)
-	} else {	
+	} else {
 		//log.Println("Updating: " + word)
 		updateWordSQL := `UPDATE five_letter_words SET wordle_guess_list = 1 WHERE word = ?`
 		statement, err := db.Prepare(updateWordSQL)
@@ -129,12 +129,12 @@ func updateMoreDatabase(db *sql.DB, word string) {
 
 func fatalError(err error) {
 	if err != nil {
-        log.Fatalln(err)
+		log.Fatalln(err)
 	}
 }
 
 func addScannedWords(db *sql.DB, scanner *bufio.Scanner) {
-    for scanner.Scan() {
+	for scanner.Scan() {
 		word := scanner.Text()
 		if len(word) == 5 {
 			word = strings.ToUpper(word)
@@ -142,28 +142,28 @@ func addScannedWords(db *sql.DB, scanner *bufio.Scanner) {
 				addToSqliteDatabase(db, word)
 			}
 		}
-    }
-    err := scanner.Err()
+	}
+	err := scanner.Err()
 	fatalError(err)
 }
 
 func updateScannedWords(db *sql.DB, scanner *bufio.Scanner) {
-    for scanner.Scan() {
+	for scanner.Scan() {
 		wordle_word := scanner.Text()
 		wordle_word = strings.ToUpper(wordle_word)
 		updateDatabase(db, wordle_word)
-    }
-    err := scanner.Err()
+	}
+	err := scanner.Err()
 	fatalError(err)
 }
 
 func updateMoreScannedWords(db *sql.DB, scanner *bufio.Scanner) {
-    for scanner.Scan() {
+	for scanner.Scan() {
 		wordle_word := scanner.Text()
 		wordle_word = strings.ToUpper(wordle_word)
 		updateMoreDatabase(db, wordle_word)
-    }
-    err := scanner.Err()
+	}
+	err := scanner.Err()
 	fatalError(err)
 }
 
@@ -220,12 +220,12 @@ func getWordleWords(db *sql.DB) []string {
 }
 
 func stringInSlice(a string, list []string) bool {
-    for _, b := range list {
-        if b == a {
-            return true
-        }
-    }
-    return false
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }
 
 // I'm not 100% certain about this function working correctly, but I think it works well enough at least
@@ -249,7 +249,7 @@ func getColors(targetWord, guess string) [5]rune {
 				} else {
 					colors[j] = 'Y'
 				}
-				
+
 			}
 		}
 	}
@@ -277,8 +277,8 @@ func main() {
 	fullWordList := getWordleGuessWords(sqliteDb)
 	// Allow any word as a guess (words include all wordle guesses, all linux words, and all wordle answers)
 	// fullWordList := getAllWords(sqliteDb)
-    s1 := rand.NewSource(time.Now().UnixNano())
-    r1 := rand.New(s1)
+	s1 := rand.NewSource(time.Now().UnixNano())
+	r1 := rand.New(s1)
 	targetWord := wordList[r1.Intn(len(wordList))]
 	green := color.FgGreen.Render
 	yellow := color.FgYellow.Render
@@ -286,7 +286,7 @@ func main() {
 	var colors [6][5]rune
 	var guess_valid bool
 	for guess_number := 0; guess_number < 6; guess_number++ {
-		fmt.Println("Enter guess " + string('0' + guess_number + 1))
+		fmt.Println("Enter guess " + string('0'+guess_number+1))
 		guess_valid = false
 		for !guess_valid {
 			fmt.Scanln(&guess)
@@ -323,4 +323,3 @@ func main() {
 	}
 	print("Target Word: " + targetWord + "\n")
 }
-
