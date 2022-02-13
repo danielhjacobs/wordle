@@ -8,20 +8,23 @@ on:
       - "*" # triggers only if push new tag version, like `0.8.4` or else
 
 jobs:
-  build:
+  releases-matrix:
+    name: Release Go Binary
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # build and publish in parallel: linux/386, linux/amd64, linux/arm64, windows/386, windows/amd64, darwin/amd64, darwin/arm64
+        goos: [linux, windows, darwin]
+        goarch: ["386", amd64, arm64]
+        exclude:
+          - goarch: "386"
+            goos: darwin
+          - goarch: arm64
+            goos: windows
     steps:
-      - name: Checkout
-        uses: actions/checkout@master
-
-      - name: Make binaries
-        uses: sosedoff/actions/golang-build@master
-
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: /github/workspace/.release/*
-          tag: ${{ github.ref }}
-          overwrite: true
-          file_glob: true
+    - uses: actions/checkout@v2
+    - uses: wangyoucao577/go-release-action@v1.24
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        goos: ${{ matrix.goos }}
+        goarch: ${{ matrix.goarch }}
