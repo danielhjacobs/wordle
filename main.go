@@ -289,6 +289,7 @@ func main() {
 		fmt.Println("Enter guess " + string('0'+guess_number+1))
 		guess_valid = false
 		for !guess_valid {
+			guess = ""
 			fmt.Scanln(&guess)
 			if len(guess) != 5 {
 				fmt.Println("Guess must contain exactly five letters")
