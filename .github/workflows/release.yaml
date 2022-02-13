@@ -16,9 +16,7 @@ jobs:
 
       - name: Make binaries
         uses: sosedoff/actions/golang-build@master
-        
-      - name: Build
-        run: cargo build --release
+
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@v2
         with:
