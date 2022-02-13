@@ -1,9 +1,8 @@
 # .github/workflows/release.yaml
 
 on:
-  push:
-    branches:
-        - 'main'
+  release:
+    types: [created]
 
 jobs:
   releases-matrix:
