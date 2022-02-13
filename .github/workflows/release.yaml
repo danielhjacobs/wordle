@@ -16,3 +16,14 @@ jobs:
 
       - name: Make binaries
         uses: sosedoff/actions/golang-build@master
+        
+      - name: Build
+        run: cargo build --release
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: /github/workspace/.release/*
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
