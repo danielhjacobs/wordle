@@ -270,9 +270,9 @@ func main() {
 		sqliteDb, _ = sql.Open("sqlite3", "./words.db")
 	}
 	// Limit to only wordle's own answers
-	// wordList := getWordleWords(sqliteDb)
+	wordList := getWordleWords(sqliteDb)
 	// Allow all wordle words as answers
-	wordList := getWordleGuessWords(sqliteDb)
+	// wordList := getWordleGuessWords(sqliteDb)
 	// Allow all wordle words as guesses
 	fullWordList := getWordleGuessWords(sqliteDb)
 	// Allow any word as a guess (words include all wordle guesses, all linux words, and all wordle answers)
