@@ -246,7 +246,7 @@ func getColors(targetWord, guess string) [5]rune {
 				}
 				if i == j {
 					colors[j] = 'G'
-				} else {
+				} else if colors[j] != 'G' {
 					colors[j] = 'Y'
 				}
 
