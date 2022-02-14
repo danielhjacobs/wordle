@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/gookit/color"
-	_ "github.com/mattn/go-sqlite3"
 	"log"
 	"math/rand"
+	_ "modernc.org/sqlite"
 	"os"
 	"strings"
 	"time"
@@ -49,7 +49,7 @@ func createTable(db *sql.DB) {
 func addToSqliteDatabase(db *sql.DB, word string) {
 	if !wordExists(db, word) {
 		log.Println("Inserting: " + word)
-		insertWordSQL := `INSERT INTO five_letter_words(word) VALUES (?)`
+		insertWordSQL := `INSERT INTO five_letter_words(word) VALUES (?);`
 		statement, err := db.Prepare(insertWordSQL)
 		fatalError(err)
 		_, err = statement.Exec(word)
@@ -93,14 +93,14 @@ func updateDatabase(db *sql.DB, word string) {
 	if !wordExists(db, word) {
 		log.Println(word + " is not in database")
 		log.Println("Inserting: " + word)
-		insertWordSQL := `INSERT INTO five_letter_words(word, linux_word_list, wordle_word_list, wordle_guess_list) VALUES (?, ?, ?, ?)`
+		insertWordSQL := `INSERT INTO five_letter_words(word, linux_word_list, wordle_word_list, wordle_guess_list) VALUES (?, ?, ?, ?);`
 		statement, err := db.Prepare(insertWordSQL)
 		fatalError(err)
 		_, err = statement.Exec(word, 0, 1, 1)
 		fatalError(err)
 	} else {
 		//log.Println("Updating: " + word)
-		updateWordSQL := `UPDATE five_letter_words SET wordle_word_list = 1, wordle_guess_list = 1 WHERE word = ?`
+		updateWordSQL := `UPDATE five_letter_words SET wordle_word_list = 1, wordle_guess_list = 1 WHERE word = ?;`
 		statement, err := db.Prepare(updateWordSQL)
 		fatalError(err)
 		_, err = statement.Exec(word)
@@ -112,14 +112,14 @@ func updateMoreDatabase(db *sql.DB, word string) {
 	if !wordExists(db, word) {
 		log.Println(word + " is not in database")
 		log.Println("Inserting: " + word)
-		insertWordSQL := `INSERT INTO five_letter_words(word, linux_word_list, wordle_guess_list) VALUES (?, ?, ?)`
+		insertWordSQL := `INSERT INTO five_letter_words(word, linux_word_list, wordle_guess_list) VALUES (?, ?, ?);`
 		statement, err := db.Prepare(insertWordSQL)
 		fatalError(err)
 		_, err = statement.Exec(word, 0, 1)
 		fatalError(err)
 	} else {
 		//log.Println("Updating: " + word)
-		updateWordSQL := `UPDATE five_letter_words SET wordle_guess_list = 1 WHERE word = ?`
+		updateWordSQL := `UPDATE five_letter_words SET wordle_guess_list = 1 WHERE word = ?;`
 		statement, err := db.Prepare(updateWordSQL)
 		fatalError(err)
 		_, err = statement.Exec(word)
@@ -169,7 +169,7 @@ func updateMoreScannedWords(db *sql.DB, scanner *bufio.Scanner) {
 
 func getAllWords(db *sql.DB) []string {
 	var wordList []string
-	row, err := db.Query("SELECT word FROM five_letter_words ORDER BY word")
+	row, err := db.Query("SELECT word FROM five_letter_words ORDER BY word;")
 	fatalError(err)
 	defer row.Close()
 	for row.Next() { // Iterate and fetch the records from result cursor
@@ -182,7 +182,7 @@ func getAllWords(db *sql.DB) []string {
 
 func getWordleGuessWords(db *sql.DB) []string {
 	var wordList []string
-	row, err := db.Query("SELECT word FROM five_letter_words WHERE wordle_guess_list=1 ORDER BY word")
+	row, err := db.Query("SELECT word FROM five_letter_words WHERE wordle_guess_list=1 ORDER BY word;")
 	fatalError(err)
 	defer row.Close()
 	for row.Next() { // Iterate and fetch the records from result cursor
@@ -195,7 +195,7 @@ func getWordleGuessWords(db *sql.DB) []string {
 
 func getLinuxWords(db *sql.DB) []string {
 	var wordList []string
-	row, err := db.Query("SELECT word FROM five_letter_words WHERE linux_word_list=1 ORDER BY word")
+	row, err := db.Query("SELECT word FROM five_letter_words WHERE linux_word_list=1 ORDER BY word;")
 	fatalError(err)
 	defer row.Close()
 	for row.Next() { // Iterate and fetch the records from result cursor
@@ -208,7 +208,7 @@ func getLinuxWords(db *sql.DB) []string {
 
 func getWordleWords(db *sql.DB) []string {
 	var wordList []string
-	row, err := db.Query("SELECT word FROM five_letter_words WHERE wordle_word_list=1 ORDER BY word")
+	row, err := db.Query("SELECT word FROM five_letter_words WHERE wordle_word_list=1 ORDER BY word;")
 	fatalError(err)
 	defer row.Close()
 	for row.Next() { // Iterate and fetch the records from result cursor
@@ -258,16 +258,18 @@ func getColors(targetWord, guess string) [5]rune {
 
 func main() {
 	var sqliteDb *sql.DB
+	var err error
 	if !fileFound("./words.db") {
 		createSqlite3Db()
-		sqliteDb, _ = sql.Open("sqlite3", "./words.db")
-		defer sqliteDb.Close()
+		sqliteDb, err = sql.Open("sqlite", "./words.db")
+		fatalError(err)
 		createTable(sqliteDb)
 		scanFileLineByLine(sqliteDb, "./linux_word_list.txt", addScannedWords)
 		scanFileLineByLine(sqliteDb, "./wordle-answers-alphabetical.txt", updateScannedWords)
 		scanFileLineByLine(sqliteDb, "./wordle-allowed-guesses.txt", updateMoreScannedWords)
 	} else {
-		sqliteDb, _ = sql.Open("sqlite3", "./words.db")
+		sqliteDb, err = sql.Open("sqlite", "./words.db")
+		fatalError(err)
 	}
 	// Limit to only wordle's own answers
 	wordList := getWordleWords(sqliteDb)
@@ -322,5 +324,7 @@ func main() {
 		}
 		print("\n")
 	}
+	err = sqliteDb.Close()
+	fatalError(err)
 	print("Target Word: " + targetWord + "\n")
 }
